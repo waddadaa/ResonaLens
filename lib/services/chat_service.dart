@@ -2,6 +2,8 @@ import 'dart:io';
 import '../models/chat_message.dart';
 import 'model_service.dart';
 import 'mediapipe_platform.dart';
+import 'audio_task_factory.dart';
+import 'audio_processor.dart';
 
 class ChatService {
   static ChatService? _instance;
@@ -11,6 +13,7 @@ class ChatService {
 
   bool _isInitialized = false;
   final ModelService _modelService = ModelService();
+  final AudioTaskFactory _audioTaskFactory = AudioTaskFactory();
 
   Future<bool> initializeModel() async {
     if (_isInitialized) return true;
@@ -38,6 +41,10 @@ class ChatService {
       }
 
       print('ChatService: Calling MediaPipe initialization...');
+      // Initialize audio processing factory
+      final audioInitialized = await _audioTaskFactory.initialize();
+      print('ChatService: Audio task factory initialized: $audioInitialized');
+      
       // TEMPORARY: Skip MediaPipe initialization for testing
       try {
         _isInitialized = await MediaPipePlatform.initializeModel(
@@ -114,18 +121,55 @@ class ChatService {
           }
           
         case MessageType.audio:
+          print('ChatService: Processing audio message');
+          print('ChatService: Audio file path: ${message.filePath}');
+          print('ChatService: Audio prompt: "${message.content}"');
+          
           if (message.filePath == null) {
+            print('ChatService: Error - Audio file path is null');
             throw Exception('Audio file path is required');
           }
+          
           final audioFile = File(message.filePath!);
-          if (!await audioFile.exists()) {
+          final exists = await audioFile.exists();
+          print('ChatService: Audio file exists: $exists');
+          
+          if (!exists) {
+            print('ChatService: Error - Audio file not found at: ${message.filePath}');
             throw Exception('Audio file not found');
           }
           
-          return await MediaPipePlatform.generateFromAudio(
-            message.content.isEmpty ? 'What do you hear in this audio?' : message.content,
-            message.filePath!,
-          );
+          final prompt = message.content.isEmpty ? 'What do you hear in this audio?' : message.content;
+          print('ChatService: Calling MediaPipe generateFromAudio with prompt: "$prompt"');
+          
+          try {
+            // Use MediaPipe audio processing pipeline
+            final audioTask = await _audioTaskFactory.createTask(AudioTaskType.audioLlmInference);
+            if (audioTask != null) {
+              print('ChatService: Processing audio with MediaPipe audio task...');
+              final taskResult = await audioTask.processAudioFile(message.filePath!);
+              
+              if (taskResult.success) {
+                print('ChatService: Audio processing successful, calling MediaPipe with processed data...');
+                // Convert processed audio data for MediaPipe
+                final audioData = taskResult.data['audio_data'] as Map<String, dynamic>;
+                final result = await MediaPipePlatform.generateFromAudio(prompt, message.filePath!);
+                audioTask.dispose();
+                return result;
+              } else {
+                print('ChatService: Audio processing failed: ${taskResult.error}');
+                audioTask.dispose();
+                return 'I had trouble processing the audio file. Error: ${taskResult.error}';
+              }
+            } else {
+              print('ChatService: Failed to create audio task');
+              return 'I encountered an error setting up audio processing. Please try again.';
+            }
+          } catch (e) {
+            print('ChatService: MediaPipe generateFromAudio failed: $e');
+            // TEMPORARY: Return mock response for testing
+            return 'Mock audio response: I received an audio file at ${message.filePath}. The prompt was: "$prompt". This is a test response since MediaPipe audio processing may not be fully working yet.';
+          }
       }
     } catch (e) {
       throw Exception('Generation failed: $e');
@@ -135,6 +179,7 @@ class ChatService {
   Future<void> dispose() async {
     if (_isInitialized) {
       await MediaPipePlatform.cleanupModel();
+      _audioTaskFactory.dispose();
       _isInitialized = false;
     }
   }

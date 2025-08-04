@@ -2,7 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import '../models/chat_message.dart';
+import '../services/audio_service.dart';
 
 class MediaInputBottomSheet extends StatefulWidget {
   final Function({
@@ -22,15 +24,18 @@ class MediaInputBottomSheet extends StatefulWidget {
 
 class _MediaInputBottomSheetState extends State<MediaInputBottomSheet> {
   final TextEditingController _promptController = TextEditingController();
+  final AudioService _audioService = AudioService();
   File? _selectedFile;
   MessageType _selectedType = MessageType.image;
+  bool _isRecording = false;
+  bool _isPlaying = false;
+  String? _recordedAudioPath;
 
   Future<void> _pickFile() async {
     if (_selectedType == MessageType.image) {
       await _pickImage();
     } else {
-      // For audio, we'll keep the placeholder for now
-      _showAudioPickerDialog();
+      await _pickAudio();
     }
   }
 
@@ -86,23 +91,143 @@ class _MediaInputBottomSheetState extends State<MediaInputBottomSheet> {
     );
   }
 
-  void _showAudioPickerDialog() {
-    showDialog(
+  Future<void> _pickAudio() async {
+    final choice = await _showAudioSourceDialog();
+    if (choice == null) return;
+
+    if (choice == 'record') {
+      await _recordAudio();
+    } else if (choice == 'file') {
+      await _pickAudioFile();
+    }
+  }
+
+  Future<String?> _showAudioSourceDialog() async {
+    return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select Audio'),
-        content: const Text(
-          'Audio file selection is not yet implemented.\n\n'
-          'This feature will be added in a future update.',
-        ),
+        title: const Text('Select Audio Source'),
+        content: const Text('Choose how to get the audio:'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop('file'),
+            child: const Text('Pick File'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop('record'),
+            child: const Text('Record'),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _pickAudioFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.audio,
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        setState(() {
+          _selectedFile = File(result.files.single.path!);
+          _recordedAudioPath = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking audio file: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _recordAudio() async {
+    try {
+      if (!_isRecording) {
+        final hasPermission = await _audioService.hasMicrophonePermission();
+        if (!hasPermission) {
+          final granted = await _audioService.requestMicrophonePermission();
+          if (!granted) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Microphone permission is required for recording')),
+              );
+            }
+            return;
+          }
+        }
+
+        final started = await _audioService.startRecording();
+        if (started) {
+          setState(() {
+            _isRecording = true;
+          });
+        }
+      } else {
+        final recordingPath = await _audioService.stopRecording();
+        setState(() {
+          _isRecording = false;
+          if (recordingPath != null) {
+            _recordedAudioPath = recordingPath;
+            _selectedFile = File(recordingPath);
+          }
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isRecording = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error recording audio: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _playRecordedAudio() async {
+    if (_recordedAudioPath == null) return;
+
+    try {
+      if (!_isPlaying) {
+        final success = await _audioService.playAudio(_recordedAudioPath!);
+        if (success) {
+          setState(() {
+            _isPlaying = true;
+          });
+          
+          // Listen for playback completion (simplified)
+          Future.delayed(const Duration(seconds: 1), () {
+            if (mounted) {
+              setState(() {
+                _isPlaying = false;
+              });
+            }
+          });
+        }
+      } else {
+        await _audioService.stopAudio();
+        setState(() {
+          _isPlaying = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isPlaying = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error playing audio: $e')),
+        );
+      }
+    }
   }
 
 
@@ -221,16 +346,58 @@ class _MediaInputBottomSheetState extends State<MediaInputBottomSheet> {
                   Text(
                     _selectedFile != null
                         ? 'Selected: ${_selectedFile!.path.split('/').last}'
-                        : 'No file selected',
+                        : _isRecording 
+                            ? 'Recording...'
+                            : 'No file selected',
                     style: TextStyle(
-                      color: _selectedFile != null ? Colors.green : Colors.grey[600],
+                      color: _selectedFile != null 
+                          ? Colors.green 
+                          : _isRecording 
+                              ? Colors.orange
+                              : Colors.grey[600],
                     ),
                   ),
                   const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: _pickFile,
-                    icon: const Icon(Icons.folder_open),
-                    label: Text('Select ${_selectedType == MessageType.image ? 'Image' : 'Audio'}'),
+                  Column(
+                    children: [
+                      if (_selectedType == MessageType.audio && _recordedAudioPath != null) ...[
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _playRecordedAudio,
+                            icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
+                            label: Text(_isPlaying ? 'Stop Playback' : 'Play Recording'),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _selectedType == MessageType.audio && _isRecording 
+                              ? _recordAudio
+                              : _pickFile,
+                          icon: Icon(
+                            _selectedType == MessageType.image 
+                                ? Icons.folder_open
+                                : _isRecording 
+                                    ? Icons.stop
+                                    : Icons.mic,
+                          ),
+                          label: Text(
+                            _selectedType == MessageType.image 
+                                ? 'Select Image'
+                                : _isRecording 
+                                    ? 'Stop Recording'
+                                    : 'Record/Select Audio',
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _isRecording ? Colors.red : null,
+                            foregroundColor: _isRecording ? Colors.white : null,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

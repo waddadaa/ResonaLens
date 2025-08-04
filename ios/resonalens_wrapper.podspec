@@ -1,10 +1,10 @@
 Pod::Spec.new do |spec|
-  spec.name          = 'gemma_wrapper'
+  spec.name          = 'resonalens_wrapper'
   spec.version       = '0.0.1'
   spec.license       = { :file => '../LICENSE' }
   spec.homepage      = 'https://example.com'
   spec.authors       = { 'Your Company' => 'email@example.com' }
-  spec.summary       = 'iOS/macOS Flutter plugin for Gemma model inference'
+  spec.summary       = 'iOS/macOS Flutter plugin for ResonaLens model inference'
   spec.source        = { :path => '.' }
   spec.source_files  = 'Classes/**/*'
   spec.dependency 'Flutter'

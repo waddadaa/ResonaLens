@@ -37,10 +37,14 @@ dependencies:
   dio: ^5.4.0
   path_provider: ^2.1.1
   shared_preferences: ^2.2.2
-  permission_handler: ^11.0.1
+  permission_handler: ^12.0.1
   crypto: ^3.0.3
   image_picker: ^1.0.4
   wakelock_plus: ^1.2.1
+  record: ^6.0.0
+  audioplayers: ^6.5.0
+  path: ^1.8.3
+  file_picker: ^10.2.1
 
 dev_dependencies:
   flutter_test:
@@ -51,7 +55,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

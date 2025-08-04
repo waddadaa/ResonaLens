@@ -110,28 +110,51 @@ class MainActivity : FlutterActivity() {
                     val audioPath = call.argument<String>("audioPath")
                     
                     if (prompt != null && audioPath != null) {
-                        // For now, treat audio as text-only since audio processing would need additional setup
-                        // In a full implementation, you'd process the audio file and extract features
-                        val audioPrompt = "$prompt [Audio file: $audioPath - Audio processing not yet implemented]"
-                        
                         if (!gemmaHelper.isInitialized()) {
                             result.error("MODEL_NOT_INITIALIZED", "Model is not initialized", null)
                             return@setMethodCallHandler
                         }
                         
-                        gemmaHelper.generateResponse(
-                            prompt = audioPrompt,
-                            callback = { response -> 
-                                mainHandler.post {
-                                    result.success(response)
-                                }
-                            },
-                            errorCallback = { error -> 
-                                mainHandler.post {
-                                    result.error("INFERENCE_ERROR", error, null)
-                                }
+                        Thread {
+                            println("MainActivity: Loading audio from path: $audioPath")
+                            val audioData = gemmaHelper.loadAudioFromPath(audioPath)
+                            if (audioData != null && audioData.isNotEmpty()) {
+                                println("MainActivity: Audio loaded successfully, calling generateResponse with audio")
+                                gemmaHelper.generateResponse(
+                                    prompt = prompt,
+                                    audioData = audioData,
+                                    callback = { response -> 
+                                        println("MainActivity: Received audio response: $response")
+                                        mainHandler.post {
+                                            result.success(response)
+                                        }
+                                    },
+                                    errorCallback = { error -> 
+                                        println("MainActivity: Error in audio generateResponse: $error")
+                                        mainHandler.post {
+                                            result.error("INFERENCE_ERROR", error, null)
+                                        }
+                                    }
+                                )
+                            } else {
+                                println("MainActivity: Failed to load audio from path: $audioPath")
+                                // Fallback to text-only processing with audio description
+                                val audioPrompt = "$prompt [Note: Audio file at $audioPath could not be processed directly]"
+                                gemmaHelper.generateResponse(
+                                    prompt = audioPrompt,
+                                    callback = { response -> 
+                                        mainHandler.post {
+                                            result.success("I received an audio file but couldn't process it directly. Here's my response based on your prompt: $response")
+                                        }
+                                    },
+                                    errorCallback = { error -> 
+                                        mainHandler.post {
+                                            result.error("AUDIO_PROCESSING_ERROR", "Failed to process audio: $error", null)
+                                        }
+                                    }
+                                )
                             }
-                        )
+                        }.start()
                     } else {
                         result.error("INVALID_ARGUMENTS", "Prompt and audio path are required", null)
                     }

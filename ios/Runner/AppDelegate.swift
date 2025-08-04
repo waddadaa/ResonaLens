@@ -4,7 +4,7 @@ import UIKit
 @main
 @objc class AppDelegate: FlutterAppDelegate {
     private let CHANNEL = "com.example.resonalens/mediapipe"
-    private let gemmaHelper = GemmaModelHelper.shared()
+    private let resonalensHelper = GemmaModelHelper.shared()
     
     override func application(
         _ application: UIApplication,
@@ -52,7 +52,7 @@ import UIKit
         print("AppDelegate: Vision modality: \(enableVisionModality), Audio modality: \(enableAudioModality)")
         
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let success = self?.gemmaHelper.initializeModel(
+            let success = self?.resonalensHelper.initializeModel(
                 modelPath: modelPath,
                 enableVisionModality: enableVisionModality,
                 enableAudioModality: enableAudioModality
@@ -77,7 +77,7 @@ import UIKit
             return
         }
         
-        if !gemmaHelper.isInitialized() {
+        if !resonalensHelper.isInitialized() {
             result(FlutterError(code: "MODEL_NOT_INITIALIZED", message: "Model is not initialized", details: nil))
             return
         }
@@ -85,7 +85,7 @@ import UIKit
         print("AppDelegate: Generating text for prompt: \(prompt)")
         
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            self?.gemmaHelper.generateResponse(
+            self?.resonalensHelper.generateResponse(
                 prompt: prompt,
                 images: nil,
                 completion: { response in
@@ -108,7 +108,7 @@ import UIKit
             return
         }
         
-        if !gemmaHelper.isInitialized() {
+        if !resonalensHelper.isInitialized() {
             result(FlutterError(code: "MODEL_NOT_INITIALIZED", message: "Model is not initialized", details: nil))
             return
         }
@@ -118,10 +118,10 @@ import UIKit
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
             
-            if let image = self.gemmaHelper.loadImageFromPath(imagePath) {
+            if let image = self.resonalensHelper.loadImageFromPath(imagePath) {
                 print("AppDelegate: Image loaded successfully, calling generateResponse with image")
                 
-                self.gemmaHelper.generateResponse(
+                self.resonalensHelper.generateResponse(
                     prompt: prompt,
                     images: [image],
                     completion: { response in
