@@ -1,0 +1,70 @@
+{
+  "strip_tags": [
+    "script", "style", "nav", "footer", "header", "aside",
+    "iframe", "noscript", "form", "svg", "canvas",
+    "[class*='cookie']", "[class*='consent']", "[class*='banner']",
+    "[class*='popup']", "[class*='modal']", "[class*='sidebar']",
+    "[class*='advertisement']", "[class*='ad-']", "[id*='ad-']"
+  ],
+  "content_selectors": [
+    "article",
+    "[role='main']",
+    ".post-content",
+    ".article-body",
+    ".entry-content",
+    ".markdown-body",
+    ".prose",
+    ".content",
+    "main"
+  ],
+  "title_selectors": [
+    "h1",
+    "meta[property='og:title']",
+    "title"
+  ],
+  "author_selectors": [
+    "meta[name='author']",
+    "meta[property='article:author']",
+    ".author",
+    "[rel='author']",
+    ".byline"
+  ],
+  "date_selectors": [
+    "meta[property='article:published_time']",
+    "meta[name='date']",
+    "meta[name='publish_date']",
+    "time[datetime]",
+    ".publish-date",
+    ".date",
+    ".posted-on"
+  ],
+  "failure_detection": {
+    "paywall_indicators": [
+      "subscribe to read", "premium content", "members only",
+      "create a free account", "sign in to continue"
+    ],
+    "cookie_wall_selectors": [
+      "[class*='cookie-wall']", "[class*='consent-wall']",
+      "[id*='cookie-banner']"
+    ],
+    "empty_body_threshold_chars": 100
+  },
+  "structure_preservation": {
+    "keep_headings": true,
+    "keep_lists": true,
+    "keep_code_blocks": true,
+    "keep_blockquotes": true,
+    "keep_tables": true,
+    "output_format": "markdown"
+  },
+  "url_cleanup": {
+    "strip_tracking_params": [
+      "utm_source", "utm_medium", "utm_campaign", "utm_term",
+      "utm_content", "fbclid", "gclid", "ref"
+    ]
+  },
+  "max_output_tokens": 2000,
+  "timeout_ms": 15000,
+  "max_redirects": 5,
+  "user_agent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) ResonaLens/1.0"
+}

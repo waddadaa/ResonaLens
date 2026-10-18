@@ -1,45 +1,93 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
+# Build outputs
+build/
+Build/
+*.o
+*.a
+*.so
+*.dylib
+*.apk
+*.aab
+*.ipa
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
+# Qt Creator
+.qtcreator/
+*.user
+*.user.*
+*.autosave
+CMakeLists.txt.user
+
+# Qt Design Studio
+Generated/
+*.qmlproject.qtds
+
+# IDE
+.vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# OS
+.DS_Store
+Thumbs.db
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-/coverage/
+# Android
+android/.gradle/
+android/gradle/
+android/gradlew
+android/gradlew.bat
+android/local.properties
 
-# Symbolication related
-app.*.symbols
+# Compiled resources
+*.qmlc
+*.jsc
+qmlcache/
 
-# Obfuscation related
-app.*.map.json
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+compile_commands.json
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# Secrets
+*.env
+*.keystore
+*.jks
+google-services.json
+
+# Prebuilt LiteRT-LM binaries (large; fetch separately — see README)
+third_party/litert_lm_main
+third_party/litert_android_arm64/
+android/assets/litert/
+
+# Nested build output of vendored libs
+third_party/websearchlib/build/
+
+# Local data / models
+*.db
+*.gguf
+*.litertlm
+*.onnx
+
+# AI assistant planning / config (local only)
+docs/superpowers/
+superpowers/
+.superpowers/
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.cursor/
+.cursorrules
+.cursorignore
+.windsurf/
+.windsurfrules
+.aider*
+.codex/
+AGENTS.md
+GEMINI.md
+.gemini/
+.github/copilot-instructions.md
+.continue/
+.clinerules
+.roo/

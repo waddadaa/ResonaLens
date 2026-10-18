@@ -1,0 +1,58 @@
+{
+  "providers": [
+    {
+      "name": "semantic_scholar",
+      "search_url": "https://api.semanticscholar.org/graph/v1/paper/search",
+      "paper_url": "https://api.semanticscholar.org/graph/v1/paper/{paper_id}",
+      "params": {
+        "query": "{query}",
+        "limit": "{max_results}",
+        "fields": "title,authors,year,abstract,citationCount,openAccessPdf,externalIds,publicationTypes",
+        "year": "{year_range}"
+      },
+      "requires_api_key": false,
+      "rate_limit": "100 requests per 5 minutes",
+      "notes": "Primary provider — best metadata, citation counts, and open access PDF links. year param format: 2024-2026 or 2025-"
+    },
+    {
+      "name": "arxiv",
+      "search_url": "http://export.arxiv.org/api/query",
+      "params": {
+        "search_query": "all:{query}",
+        "start": 0,
+        "max_results": "{max_results}",
+        "sortBy": "relevance"
+      },
+      "requires_api_key": false,
+      "rate_limit": "3 second delay between requests",
+      "notes": "Fallback provider — preprints only, always has PDF, no citation counts"
+    }
+  ],
+  "default_provider": "semantic_scholar",
+  "fallback_provider": "arxiv",
+  "fallback_threshold": 3,
+  "default_max_results": 5,
+  "max_max_results": 10,
+  "default_sort": "citationCount",
+  "query_reformulation": {
+    "enabled": true,
+    "use_academic_terms": true,
+    "include_author_names": true,
+    "notes": "LLM rewrites casual language into specific academic search terms"
+  },
+  "auto_download_pdf": {
+    "enabled": true,
+    "max_papers": 2,
+    "only_open_access": true,
+    "extract_text_after_download": true,
+    "notes": "Auto-download top 1-2 open-access PDFs and extract text via document_reader"
+  },
+  "filters": {
+    "year_range": null,
+    "min_citations": null,
+    "open_access_only": false,
+    "notes": "Filters applied at query time when user specifies constraints"
+  },
+  "pdf_download_dir": "temp/papers/",
+  "timeout_ms": 15000
+}

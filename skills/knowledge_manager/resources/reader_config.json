@@ -1,0 +1,7 @@
+{
+  "windowTokens": 400,
+  "windowOverlap": 50,
+  "maxAccumulatedTokensPerFile": 1500,
+  "largeContextThreshold": 8000,
+  "answerReserveTokens": 1500
+}

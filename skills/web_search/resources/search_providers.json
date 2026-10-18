@@ -1,0 +1,42 @@
+{
+  "providers": [
+    {
+      "name": "duckduckgo",
+      "type": "html_scrape",
+      "url": "https://lite.duckduckgo.com/lite/",
+      "method": "POST",
+      "params": {
+        "q": "{query}"
+      },
+      "requires_api_key": false,
+      "notes": "DuckDuckGo Lite HTML version — no API key needed, parse HTML response"
+    },
+    {
+      "name": "searxng",
+      "type": "json_api",
+      "url": "{user_configured_instance}/search",
+      "method": "GET",
+      "params": {
+        "q": "{query}",
+        "format": "json",
+        "categories": "general",
+        "time_range": "",
+        "language": "en"
+      },
+      "requires_api_key": false,
+      "notes": "Self-hosted SearXNG instance — user must configure URL in settings. Supports time_range: day, week, month, year"
+    }
+  ],
+  "default_provider": "duckduckgo",
+  "default_max_results": 5,
+  "max_max_results": 10,
+  "auto_read_top_n": 3,
+  "retry_on_poor_results": true,
+  "max_retries": 1,
+  "query_reformulation": {
+    "enabled": true,
+    "append_date_for_current_events": true,
+    "max_queries_per_search": 2
+  },
+  "timeout_ms": 10000
+}

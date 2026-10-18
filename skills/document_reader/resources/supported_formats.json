@@ -1,0 +1,58 @@
+{
+  "formats": [
+    {
+      "extension": ".pdf",
+      "mime_type": "application/pdf",
+      "extractor": "pdftotext",
+      "extractor_flags": ["-layout"],
+      "fallback_extractor": "mupdf",
+      "supports_pages": true,
+      "supports_images": false,
+      "notes": "Use pdftotext -layout for structure preservation; fall back to mupdf"
+    },
+    {
+      "extension": ".md",
+      "mime_type": "text/markdown",
+      "extractor": "heading_parser",
+      "split_on": "## ",
+      "supports_pages": false,
+      "supports_images": false,
+      "notes": "Split at ## headings; each chunk prefixed with its heading"
+    },
+    {
+      "extension": ".txt",
+      "mime_type": "text/plain",
+      "extractor": "paragraph_splitter",
+      "supports_pages": false,
+      "supports_images": false,
+      "notes": "Split on double newlines into paragraphs"
+    },
+    {
+      "extension": ".html",
+      "mime_type": "text/html",
+      "extractor": "readability",
+      "supports_pages": false,
+      "supports_images": false,
+      "notes": "Run through web_reader readability pipeline before chunking"
+    }
+  ],
+  "chunking": {
+    "target_tokens": 512,
+    "max_tokens": 512,
+    "min_chunk_tokens": 64,
+    "overlap_tokens": 0,
+    "notes": "No overlap — 2026 research shows overlap adds noise without improving BM25 retrieval quality"
+  },
+  "chunk_metadata": {
+    "include_source_file": true,
+    "include_chunk_index": true,
+    "include_heading_or_page": true,
+    "include_total_chunks": true
+  },
+  "pdf_header_footer_detection": {
+    "enabled": true,
+    "strip_repeating_lines": true,
+    "min_repeat_count": 3,
+    "notes": "Detect and strip headers/footers that repeat on every page"
+  }
+}
